@@ -1,5 +1,5 @@
 import { save, global, webWorker, clearStates, poppers, keyMultiplier, sizeApproximation, p_on, moon_on, red_on, belt_on, int_on, gal_on, quantum_level } from './vars.js';
-import { vBind, messageQueue, clearElement, popover, flib, tagEvent, powerModifier, powerCostMod, calcPrestige, spaceCostMultiplier, darkEffect, updateResetStats, calcGenomeScore, randomKey } from './functions.js';
+import { vBind, messageQueue, clearElement, popover, flib, tagEvent, powerModifier, powerCostMod, calcPrestige, spaceCostMultiplier, darkEffect, eventActive, updateResetStats, calcGenomeScore, randomKey } from './functions.js';
 import { unlockAchieve, checkAchievements, unlockFeat, universeAffix } from './achieve.js';
 import { races, traits, genus_traits, planetTraits } from './races.js';
 import { spatialReasoning, defineResources } from './resources.js';
@@ -4911,17 +4911,21 @@ function xeno_race(){
     while (typeof global.galaxy['alien1'] === 'undefined'){
         let key = randomKey(races);
         if (key !== 'protoplasm' && key !== global.race.species && races[key].type !== 'demonic'){
-            global.galaxy['alien1'] = {
-                id: key
-            };
+            if (key !== 'custom' || (key === 'custom' && global.hasOwnProperty('custom'))){
+                global.galaxy['alien1'] = {
+                    id: key
+                };
+            }
         }
     }
     while (typeof global.galaxy['alien2'] === 'undefined'){
         let key = randomKey(races);
         if (key !== 'protoplasm' && key !== global.race.species && key !== global.galaxy.alien1.id && races[key].type !== 'angelic'){
-            global.galaxy['alien2'] = {
-                id: key
-            };
+            if (key !== 'custom' || (key === 'custom' && global.hasOwnProperty('custom'))){
+                global.galaxy['alien2'] = {
+                    id: key
+                };
+            }
         }
     }
 }
@@ -5541,6 +5545,9 @@ export function fuel_adjust(fuel){
     if (global.race['cataclysm']){
         fuel *= 0.2;
     }
+    if (eventActive('launch_day')){
+        fuel *= 0.95;
+    }
     return fuel;
 }
 
@@ -5550,6 +5557,9 @@ export function int_fuel_adjust(fuel){
     }
     if (global.stats.achieve['heavyweight']){
         fuel *= 0.96 ** global.stats.achieve['heavyweight'].l;
+    }
+    if (eventActive('launch_day')){
+        fuel *= 0.95;
     }
     return fuel;
 }

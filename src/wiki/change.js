@@ -3,6 +3,31 @@ import { clearElement } from './../functions.js';
 
 const changeList = [
     {
+        version: `1.0.43`,
+        date: `5/18/2021`,
+        changes: [
+            `Banana Smoothie will no longer unlock for free in alternate universes.`,
+            `Added a Spire Floor clear timer for previously beaten monsters.`,
+            `Gate Turrets now correctly contribute to demon kills.`
+        ]
+    },
+    {
+        version: `1.0.42`,
+        date: `5/4/2021`,
+        changes: [
+            `Minor bug fixes with new events.`
+        ]
+    },
+    {
+        version: `1.0.41`,
+        date: `5/3/2021`,
+        changes: [
+            `Added launch day event for May 6th.`,
+            `New minor event system.`,
+            `The same event can no longer trigger twice in a row.`
+        ]
+    },
+    {
         version: `1.0.40`,
         date: `4/11/2021`,
         changes: [

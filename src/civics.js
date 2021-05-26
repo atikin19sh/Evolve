@@ -1155,11 +1155,6 @@ function war_campaign(gov){
         global.civic.foreign[`gov${gov}`].anx = false;
         return;
     }
-    if (global.civic.garrison.raid === 0){
-        messageQueue(loc('civics_garrison_campaign_no_soldier'),'warning');
-        return;
-    }
-    global.stats.attacks++;
 
     if (global.civic.garrison.raid > garrisonSize()){
         global.civic.garrison.raid = garrisonSize();
@@ -1167,13 +1162,19 @@ function war_campaign(gov){
     else if (global.civic.garrison.raid < 0){
         global.civic.garrison.raid = 0;
     }
+    
+    if (global.civic.garrison.raid === 0){
+        messageQueue(loc('civics_garrison_campaign_no_soldier'),'warning');
+        return;
+    }
+    global.stats.attacks++;
 
     let highLuck = global.race['claws'] ? 20 : 16;
     let lowLuck = global.race['puny'] ? 3 : 5;
 
-    let luck = Math.floor(Math.seededRandom(lowLuck,highLuck),true) / 10;
+    let luck = Math.floor(Math.seededRandom(lowLuck,highLuck,true)) / 10;
     let army = armyRating(global.civic.garrison.raid,'army') * luck;
-    let enemy = 0;                
+    let enemy = 0;
 
     switch(global.civic.garrison.tactic){
         case 0:

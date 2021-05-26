@@ -1,5 +1,5 @@
 import { global, set_alevel, set_ulevel } from './vars.js';
-import { clearElement, popover, flib, calc_mastery, masteryType, calcPillar, svgIcons, svgViewBox, format_emblem, getBaseIcon, sLevel, vBind, messageQueue, getEaster, easterEgg, getHalloween, trickOrTreat, harmonyEffect } from './functions.js';
+import { clearElement, popover, flib, calc_mastery, masteryType, calcPillar, svgIcons, svgViewBox, format_emblem, getBaseIcon, sLevel, vBind, messageQueue, eventActive, easterEgg, trickOrTreat, harmonyEffect } from './functions.js';
 import { races, genus_traits } from './races.js';
 import { universe_affixes, universe_types, piracy } from './space.js';
 import { monsters } from './portal.js';
@@ -200,6 +200,11 @@ export const feats = {
         name: loc("feat_egghunt_name"),
         desc: loc("feat_egghunt_desc"),
         flair: loc("feat_egghunt_flair")
+    },
+    launch_day: {
+        name: loc("feat_launch_day_name"),
+        desc: loc("feat_launch_day_desc"),
+        flair: loc("feat_launch_day_flair")
     },
     halloween: {
         name: loc("feat_boo_name"),
@@ -604,7 +609,7 @@ export function checkAchievements(){
             }
         });
         if (slist > 0){
-            unlockAchieve('banana',false,slist);
+            unlockAchieve('banana',false,slist,'l');
         }
         if (ulist > 0 && affix !== 'l'){
             unlockAchieve('banana',false,ulist,affix);
@@ -619,44 +624,24 @@ export function checkAchievements(){
     }
 
     const date = new Date();
-    let easter = getEaster();
-    let halloween = getHalloween();
+    let easter = eventActive('easter');
+    let halloween = eventActive('halloween');
     let year = date.getFullYear();
     if (!global.settings.boring && date.getDate() === 13 && date.getDay() === 5 && global.resource[global.race.species].amount >= 1){
         let murder = false;
-        if (global.race.universe === 'micro'){
-            murder = unlockFeat('friday',true);
-        }
-        else {
-            murder = unlockFeat('friday');
-        }
+        murder = unlockFeat('friday',global.race.universe === 'micro' ? true : false);
         if (murder){
             global.resource[global.race.species].amount--;
         }
     }
     else if (!global.settings.boring && date.getMonth() === 1 && date.getDate() === 14){
-        if (global.race.universe === 'micro'){
-            unlockFeat('valentine',true);
-        }
-        else {
-            unlockFeat('valentine');
-        }
+        unlockFeat('valentine',global.race.universe === 'micro' ? true : false);
     }
     else if (!global.settings.boring && date.getMonth() === 2 && date.getDate() === 17){
-        if (global.race.universe === 'micro'){
-            unlockFeat('leprechaun',true);
-        }
-        else {
-            unlockFeat('leprechaun');
-        }
+        unlockFeat('leprechaun',global.race.universe === 'micro' ? true : false);
     }
     else if (easter.active){
-        if (global.race.universe === 'micro'){
-            unlockFeat('easter',true);
-        }
-        else {
-            unlockFeat('easter');
-        }
+        unlockFeat('easter',global.race.universe === 'micro' ? true : false);
 
         let eggs = 0;
         for (let i=1; i<=15; i++){
@@ -666,14 +651,11 @@ export function checkAchievements(){
         }
 
         if (eggs >= 12){
-            if (global.race.universe === 'micro'){
-                unlockFeat('egghunt',true);
-            }
-            else {
-                unlockFeat('egghunt');
-            }
-
+            unlockFeat('egghunt',global.race.universe === 'micro' ? true : false);
         }
+    }
+    else if (eventActive('launch_day')){
+        unlockFeat('launch_day',global.race.universe === 'micro' ? true : false);
     }
     else if (halloween.active){
         let checkAll = true;
@@ -684,48 +666,22 @@ export function checkAchievements(){
         }
 
         if (checkAll){
-            if (global.race.universe === 'micro'){
-                unlockFeat('trickortreat',true);
-            }
-            else {
-                unlockFeat('trickortreat');
-            }
-
+            unlockFeat('trickortreat',global.race.universe === 'micro' ? true : false);
         }
 
         if (date.getMonth() === 9 && date.getDate() === 31){
-            if (global.race.universe === 'micro'){
-                unlockFeat('halloween',true);
-            }
-            else {
-                unlockFeat('halloween');
-            }
+            unlockFeat('halloween',global.race.universe === 'micro' ? true : false);
         }
     }
     else if (!global.settings.boring && date.getMonth() === 10 && date.getDate() >= 22 && date.getDate() <= 28){
-        if (global.race.universe === 'micro'){
-            unlockFeat('thanksgiving',true);
-        }
-        else {
-            unlockFeat('thanksgiving');
-        }
+        unlockFeat('thanksgiving',global.race.universe === 'micro' ? true : false);
     }
     else if (!global.settings.boring && date.getMonth() === 11 && date.getDate() == 25){
-        if (global.race.universe === 'micro'){
-            unlockFeat('xmas',true);
-        }
-        else {
-            unlockFeat('xmas');
-        }
+        unlockFeat('xmas',global.race.universe === 'micro' ? true : false);
     }
-
+    
     if (!global.settings.boring && date.getMonth() === 3 && date.getDate() >= 1 && date.getDate() <= 3 && global.stats.feat.hasOwnProperty('fool') && global.stats.feat.fool > 0){
-        if (global.race.universe === 'micro'){
-            unlockFeat('fool',true,a_level);
-        }
-        else {
-            unlockFeat('fool',false,a_level);
-        }
+        unlockFeat('fool',global.race.universe === 'micro' ? true : false);
     }
 
     if (global.stats.dkills >= 666000000){
@@ -903,8 +859,8 @@ export const perkList = {
     },
     blackhole: {
         name: loc(`achieve_blackhole_name`),
-        desc(){
-            let bonus = global.stats.achieve['blackhole'] ? global.stats.achieve.blackhole.l * 5 : 5;
+        desc(wiki){
+            let bonus = wiki ? "5/10/15/20/25" : global.stats.achieve['blackhole'] ? global.stats.achieve.blackhole.l * 5 : 5;
             return loc("achieve_perks_blackhole",[bonus]);
         },
         active(){
@@ -917,9 +873,10 @@ export const perkList = {
     },
     trade: {
         name: loc(`achieve_trade_name`),
-        desc(){
-            let bonus = global.stats.achieve['trade'] ? global.stats.achieve.trade.l : 1;
-            return loc("achieve_perks_trade",[bonus * 2,bonus]);
+        desc(wiki){
+            let bonus1 = wiki ? "2/4/6/8/10" : global.stats.achieve['trade'] ? global.stats.achieve.trade.l * 2 : 2;
+            let bonus2 = wiki ? "1/2/3/4/5" : global.stats.achieve['trade'] ? global.stats.achieve.trade.l : 1;
+            return loc("achieve_perks_trade",[bonus1,bonus2]);
         },
         active(){
             return global.stats.achieve['trade'] && global.stats.achieve.trade.l >= 1 ? true : false;
@@ -931,8 +888,8 @@ export const perkList = {
     },
     creator: {
         name: loc(`achieve_creator_name`),
-        desc(){
-            let bonus = 1 + (global.stats.achieve['creator'] ? global.stats.achieve['creator'].l * 0.5 : 0.5);
+        desc(wiki){
+            let bonus = wiki ? "1.5/2/2.5/3/3.5" : 1 + (global.stats.achieve['creator'] ? global.stats.achieve['creator'].l * 0.5 : 0.5);
             return loc("achieve_perks_creator",[bonus]);
         },
         active(){
@@ -955,9 +912,9 @@ export const perkList = {
                 }
             },
             {
-                desc(){
+                desc(wiki){
                     let rank = global.stats.achieve['mass_extinction'] ? global.stats.achieve.mass_extinction.l : 1;
-                    let bonus = (rank - 1) * 50;
+                    let bonus = wiki ? "0/50/100/150/200" : (rank - 1) * 50;
                     return loc("achieve_perks_mass_extinction2",[bonus]);
                 },
                 active(){
@@ -972,8 +929,8 @@ export const perkList = {
     },
     explorer: {
         name: loc(`achieve_explorer_name`),
-        desc(){
-            let bonus = global.stats.achieve['explorer'] ? global.stats.achieve['explorer'].l : 1;
+        desc(wiki){
+            let bonus = wiki ? "1/2/3/4/5" : global.stats.achieve['explorer'] ? global.stats.achieve['explorer'].l : 1;
             return loc("achieve_perks_explorer",[bonus]);
         },
         active(){
@@ -986,8 +943,8 @@ export const perkList = {
     },
     miners_dream: {
         name: loc(`achieve_miners_dream_name`),
-        desc(){
-            let numGeo = global.stats.achieve['miners_dream'] ? global.stats.achieve['miners_dream'].l >= 4 ? global.stats.achieve['miners_dream'].l * 2 - 3 : global.stats.achieve['miners_dream'].l : 0;
+        desc(wiki){
+            let numGeo = wiki ? "1/2/3/5/7" : global.stats.achieve['miners_dream'] ? global.stats.achieve['miners_dream'].l >= 4 ? global.stats.achieve['miners_dream'].l * 2 - 3 : global.stats.achieve['miners_dream'].l : 0;
             return loc("achieve_perks_miners_dream",[numGeo]);
         },
         active(){
@@ -1012,8 +969,8 @@ export const perkList = {
     },
     joyless: {
         name: loc(`achieve_joyless_name`),
-        desc(){
-            let bonus = global.stats.achieve['joyless'] ? global.stats.achieve['joyless'].l * 2 : 2;
+        desc(wiki){
+            let bonus = wiki ? "2/4/6/8/10" : global.stats.achieve['joyless'] ? global.stats.achieve['joyless'].l * 2 : 2;
             return loc("achieve_perks_joyless",[bonus]);
         },
         active(){
@@ -1026,8 +983,8 @@ export const perkList = {
     },
     steelen: {
         name: loc(`achieve_steelen_name`),
-        desc(){
-            let bonus = global.stats.achieve['steelen'] ? global.stats.achieve['steelen'].l * 2 : 2;
+        desc(wiki){
+            let bonus = wiki ? "2/4/6/8/10" : global.stats.achieve['steelen'] ? global.stats.achieve['steelen'].l * 2 : 2;
             return loc("achieve_perks_steelen",[bonus]);
         },
         active(){
@@ -1050,9 +1007,18 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    let bonus = global.stats.achieve['whitehole'] ? global.stats.achieve['whitehole'].l * 5 : 5;
+                desc(wiki){
+                    let bonus = wiki ? "5/10/15/20/25" : global.stats.achieve['whitehole'] ? global.stats.achieve['whitehole'].l * 5 : 5;
                     return loc("achieve_perks_whitehole2",[bonus]);
+                },
+                active(){
+                    return global.stats.achieve['whitehole'] ? true : false;
+                }
+            },
+            {
+                desc(wiki){
+                    let bonus = wiki ? "1/2/3/4/5" : global.stats.achieve['whitehole'] ? global.stats.achieve['whitehole'].l : 1;
+                    return loc("achieve_perks_whitehole3",[bonus]);
                 },
                 active(){
                     return global.stats.achieve['whitehole'] ? true : false;
@@ -1066,8 +1032,8 @@ export const perkList = {
     },
     heavyweight: {
         name: loc(`achieve_heavyweight_name`),
-        desc(){
-            let bonus = global.stats.achieve['heavyweight'] ? global.stats.achieve['heavyweight'].l * 4 : 4;
+        desc(wiki){
+            let bonus = wiki ? "4/8/12/16/20" : global.stats.achieve['heavyweight'] ? global.stats.achieve['heavyweight'].l * 4 : 4;
             return loc("achieve_perks_heavyweight",[bonus]);
         },
         active(){
@@ -1090,8 +1056,8 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    let bonus = global.stats.achieve['dissipated'] && global.stats.achieve['dissipated'].l >= 5 ? 2 : 1;
+                desc(wiki){
+                    let bonus = wiki ? "1/2" : global.stats.achieve['dissipated'] && global.stats.achieve['dissipated'].l >= 5 ? 2 : 1;
                     return loc("achieve_perks_dissipated2",[bonus]);
                 },
                 active(){
@@ -1176,8 +1142,8 @@ export const perkList = {
     },
     anarchist: {
         name: loc(`achieve_anarchist_name`),
-        desc(){
-            let bonus = global.stats.achieve['anarchist'] ? global.stats.achieve['anarchist'].l * 10 : 10;
+        desc(wiki){
+            let bonus = wiki ? "10/20/30/40/50" : global.stats.achieve['anarchist'] ? global.stats.achieve['anarchist'].l * 10 : 10;
             return loc("achieve_perks_anarchist",[bonus]);
         },
         active(){
@@ -1192,12 +1158,18 @@ export const perkList = {
         name: loc(`achieve_ascended_name`),
         group: [
             {
-                desc(){
-                    let genes = 0;
-                    if (global.stats.achieve['ascended']){
-                        for (let i=0; i<universe_affixes.length; i++){
-                            if (global.stats.achieve.ascended.hasOwnProperty(universe_affixes[i])){
-                                genes += global.stats.achieve.ascended[universe_affixes[i]];
+                desc(wiki){
+                    let genes;
+                    if (wiki){
+                        genes = "1-30";
+                    }
+                    else {
+                        genes = 0;
+                        if (global.stats.achieve['ascended']){
+                            for (let i=0; i<universe_affixes.length; i++){
+                                if (global.stats.achieve.ascended.hasOwnProperty(universe_affixes[i])){
+                                    genes += global.stats.achieve.ascended[universe_affixes[i]];
+                                }
                             }
                         }
                     }
@@ -1234,11 +1206,17 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    let bonus = global.stats.achieve['technophobe'] && global.stats.achieve.technophobe.l >= 4 ? 25 : 10;
-                    for (let i=1; i<universe_affixes.length; i++){
-                        if (global.stats.achieve['technophobe'] && global.stats.achieve.technophobe[universe_affixes[i]] && global.stats.achieve.technophobe[universe_affixes[i]] >= 5){
-                            bonus += 5;
+                desc(wiki){
+                    let bonus;
+                    if (wiki){
+                        bonus = "10/25/30/35/40/45/50";
+                    }
+                    else {
+                        bonus = global.stats.achieve['technophobe'] && global.stats.achieve.technophobe.l >= 4 ? 25 : 10;
+                        for (let i=1; i<universe_affixes.length; i++){
+                            if (global.stats.achieve['technophobe'] && global.stats.achieve.technophobe[universe_affixes[i]] && global.stats.achieve.technophobe[universe_affixes[i]] >= 5){
+                                bonus += 5;
+                            }
                         }
                     }
                     return loc("achieve_perks_technophobe2",[bonus]);
@@ -1248,14 +1226,20 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    let gems = 1;
-                    for (let i=1; i<universe_affixes.length; i++){
-                        if (global.stats.achieve['technophobe'] && global.stats.achieve.technophobe[universe_affixes[i]] && global.stats.achieve.technophobe[universe_affixes[i]] >= 5){
-                            gems += 1;
+                desc(wiki){
+                    let gems;
+                    if (wiki){
+                        gems = "1/2/3/4/5/6";
+                    }
+                    else {
+                        gems = 1;
+                        for (let i=1; i<universe_affixes.length; i++){
+                            if (global.stats.achieve['technophobe'] && global.stats.achieve.technophobe[universe_affixes[i]] && global.stats.achieve.technophobe[universe_affixes[i]] >= 5){
+                                gems += 1;
+                            }
                         }
                     }
-                    return gems > 1 ? loc("achieve_perks_technophobe3a",[gems]) : loc("achieve_perks_technophobe3",[gems]);
+                    return wiki || gems > 1 ? loc("achieve_perks_technophobe3a",[gems]) : loc("achieve_perks_technophobe3",[gems]);
                 },
                 active(){
                     return global.stats.achieve['technophobe'] && global.stats.achieve.technophobe.l >= 3 ? true : false;
@@ -1270,8 +1254,8 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    let bonus = global.stats.achieve['technophobe'] ? global.stats.achieve.technophobe.l : 0;
+                desc(wiki){
+                    let bonus = wiki ? "1/2/3/4/5" : global.stats.achieve['technophobe'] ? global.stats.achieve.technophobe.l : 0;
                     return loc("achieve_perks_technophobe5",[bonus]);
                 },
                 active(){
@@ -1354,9 +1338,9 @@ export const perkList = {
     },
     gladiator: {
         name: loc(`achieve_gladiator_name`),
-        desc(){
-            let mech = global.stats.achieve['gladiator'] ? global.stats.achieve.gladiator.l : 1;
-            return loc("achieve_perks_gladiator",[mech * 20]);
+        desc(wiki){
+            let mech = wiki ? "20/40/60/80/100" : global.stats.achieve['gladiator'] ? global.stats.achieve.gladiator.l * 20 : 20;
+            return loc("achieve_perks_gladiator",[mech]);
         },
         active(){
             return global.stats.achieve['gladiator'] && global.stats.achieve.gladiator.l >= 1 ? true : false;
@@ -1368,8 +1352,9 @@ export const perkList = {
     },
     creep: {
         name: loc(`wiki_arpa_crispr_creep`),
-        desc(){
-            return loc("arpa_perks_creep",[global.genes['creep'] ? global.genes.creep : 0]);
+        desc(wiki){
+            let bonus = wiki ? "0.01/0.02/0.03/0.04/0.05" : global.genes['creep'] ? global.genes.creep * 0.01 : 0;
+            return loc("arpa_perks_creep",[bonus]);
         },
         active(){
             return global.genes['creep'] ? true : false;
@@ -1388,8 +1373,8 @@ export const perkList = {
     },
     store: {
         name: loc(`wiki_arpa_crispr_store`),
-        desc(){
-            let psb = global.genes['store'] && global.genes.store > 1 ? (global.genes.store === 2 ? 0.06 : 0.08) : 0.04;
+        desc(wiki){
+            let psb = wiki ? "0.04/0.06/0.08" : global.genes['store'] && global.genes.store > 1 ? (global.genes.store === 2 ? 0.06 : 0.08) : 0.04;
             return loc(global.genes['store'] && global.genes.store >= 4 ? "arpa_perks_store2" : "arpa_perks_store1",[psb]);
         },
         active(){
@@ -1525,8 +1510,8 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    let bonus = global.genes['crafty'] && global.genes.crafty >= 3 ? 100 : 50;
+                desc(wiki){
+                    let bonus = wiki ? "50/100" : global.genes['crafty'] && global.genes.crafty >= 3 ? 100 : 50;
                     return loc("arpa_genepool_crafting_desc",[bonus]);
                 },
                 active(){
@@ -1546,9 +1531,9 @@ export const perkList = {
     },
     synthesis: {
         name: loc(`wiki_arpa_crispr_synthesis`),
-        desc(){
-            let base = global.genes['synthesis'] && global.genes['synthesis'] >= 2 ? (global.genes['synthesis'] >= 3 ? 4 : 3) : 2;
-            let auto = global.genes['synthesis'] && global.genes['synthesis'] >= 2 ? (global.genes['synthesis'] >= 3 ? 50 : 25) : 10;
+        desc(wiki){
+            let base = wiki ? "2/3/4" : global.genes['synthesis'] && global.genes['synthesis'] >= 2 ? (global.genes['synthesis'] >= 3 ? 4 : 3) : 2;
+            let auto = wiki ? "10/25/50" : global.genes['synthesis'] && global.genes['synthesis'] >= 2 ? (global.genes['synthesis'] >= 3 ? 50 : 25) : 10;
             return loc("arpa_genepool_synthesis_desc",[base,auto]);
         },
         active(){
@@ -1584,10 +1569,10 @@ export const perkList = {
                 }
             },
             {
-                desc(){
+                desc(wiki){
                     return loc("arpa_perks_challenge2",[
-                        global.genes['challenge'] && global.genes['challenge'] >= 4 ? 80 : 60,
-                        global.genes['challenge'] && global.genes['challenge'] >= 4 ? 40 : 60
+                        wiki ? "60/80" : global.genes['challenge'] && global.genes['challenge'] >= 4 ? 80 : 60,
+                        wiki ? "60/40" : global.genes['challenge'] && global.genes['challenge'] >= 4 ? 40 : 60
                     ]);
                 },
                 active(){
@@ -1636,8 +1621,8 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    return loc("arpa_perks_ancients4",[global.genes['ancients'] && global.genes.ancients >= 5 ? 50 : 25]);
+                desc(wiki){
+                    return loc("arpa_perks_ancients4",[wiki ? "25/50" : global.genes['ancients'] && global.genes.ancients >= 5 ? 50 : 25]);
                 },
                 active(){
                     return global.genes['ancients'] && global.genes.ancients >= 3 ? true : false;
@@ -1711,8 +1696,8 @@ export const perkList = {
     },
     plasma: {
         name: loc(`wiki_arpa_crispr_plasma`),
-        desc(){
-            let plasmid_cap = global.genes['plasma'] >= 2 ? 5 : 3;
+        desc(wiki){
+            let plasmid_cap = wiki ? "3/5" : global.genes['plasma'] >= 2 ? 5 : 3;
             return loc('arpa_genepool_mitosis_desc',[plasmid_cap]);
         },
         active(){
@@ -1868,8 +1853,8 @@ export const perkList = {
         name: loc(`wiki_arpa_blood_lust`),
         group: [
             {
-                desc(){
-                    return loc("arpa_perks_lust",[0.2 * (global.blood['lust'] ? global.blood['lust'] : 1)]);
+                desc(wiki){
+                    return loc("arpa_perks_lust",[wiki ? 0.2 : 0.2 * (global.blood['lust'] ? global.blood['lust'] : 1)]);
                 },
                 active(){
                     return global.blood['lust'] ? true : false;
@@ -1885,8 +1870,8 @@ export const perkList = {
         name: loc(`wiki_arpa_blood_illuminate`),
         group: [
             {
-                desc(){
-                    return loc("arpa_perks_illuminate",[0.01 * (global.blood['illuminate'] ? global.blood['illuminate'] : 1)]);
+                desc(wiki){
+                    return loc("arpa_perks_illuminate",[wiki ? 0.01 : 0.01 * (global.blood['illuminate'] ? global.blood['illuminate'] : 1)]);
                 },
                 active(){
                     return global.blood['illuminate'] ? true : false;
@@ -1902,8 +1887,8 @@ export const perkList = {
         name: loc(`wiki_arpa_blood_greed`),
         group: [
             {
-                desc(){
-                    return loc("arpa_perks_greed",[1 * (global.blood['greed'] ? global.blood['greed'] : 1)]);
+                desc(wiki){
+                    return loc("arpa_perks_greed",[wiki ? 1 : 1 * (global.blood['greed'] ? global.blood['greed'] : 1)]);
                 },
                 active(){
                     return global.blood['greed'] ? true : false;
@@ -1919,8 +1904,8 @@ export const perkList = {
         name: loc(`wiki_arpa_blood_hoarder`),
         group: [
             {
-                desc(){
-                    return loc("arpa_perks_hoarder",[1 * (global.blood['hoarder'] ? global.blood['hoarder'] : 1)]);
+                desc(wiki){
+                    return loc("arpa_perks_hoarder",[wiki ? 1 : 1 * (global.blood['hoarder'] ? global.blood['hoarder'] : 1)]);
                 },
                 active(){
                     return global.blood['hoarder'] ? true : false;
@@ -1936,8 +1921,8 @@ export const perkList = {
         name: loc(`wiki_arpa_blood_artisan`),
         group: [
             {
-                desc(){
-                    return loc("arpa_perks_artisan",[1 * (global.blood['artisan'] ? global.blood['artisan'] : 1)]);
+                desc(wiki){
+                    return loc("arpa_perks_artisan",[wiki ? 1 : 1 * (global.blood['artisan'] ? global.blood['artisan'] : 1)]);
                 },
                 active(){
                     return global.blood['artisan'] ? true : false;
@@ -1953,8 +1938,8 @@ export const perkList = {
         name: loc(`wiki_arpa_blood_attract`),
         group: [
             {
-                desc(){
-                    return loc("arpa_perks_attract",[5 * (global.blood['attract'] ? global.blood['attract'] : 1)]);
+                desc(wiki){
+                    return loc("arpa_perks_attract",[wiki ? 5 : 5 * (global.blood['attract'] ? global.blood['attract'] : 1)]);
                 },
                 active(){
                     return global.blood['attract'] ? true : false;
@@ -1970,8 +1955,8 @@ export const perkList = {
         name: loc(`wiki_arpa_blood_wrath`),
         group: [
             {
-                desc(){
-                    return loc("arpa_perks_wrath",[5 * (global.blood['wrath'] ? global.blood['wrath'] : 1)]);
+                desc(wiki){
+                    return loc("arpa_perks_wrath",[wiki ? 5 : 5 * (global.blood['wrath'] ? global.blood['wrath'] : 1)]);
                 },
                 active(){
                     return global.blood['wrath'] ? true : false;
@@ -2032,8 +2017,8 @@ export const perkList = {
                 }
             },
             {
-                desc(){
-                    return global.blood['unbound'] && global.blood.unbound >= 4 ? loc("arpa_blood_unbound_immunity_desc") : loc("arpa_blood_unbound_resistance_desc");
+                desc(wiki){
+                    return loc("arpa_perks_unbound_resist",[wiki ? "10/5" : global.blood['unbound'] && global.blood.unbound >= 4 ? 5 : 10]);
                 },
                 active(){
                     return global.blood['unbound'] && global.blood.unbound >= 2 ? true : false;
@@ -2069,9 +2054,9 @@ export const perkList = {
     },
     harmonic: {
         name: loc(`harmonic`),
-        desc(){
+        desc(wiki){
             let harmonic = calcPillar();
-            return loc("perks_harmonic",[+((harmonic[0] - 1) * 100).toFixed(0), +((harmonic[1] - 1) * 100).toFixed(0)]);
+            return loc("perks_harmonic",[wiki ? "1-46" : +((harmonic[0] - 1) * 100).toFixed(0), wiki ? "2-92" : +((harmonic[1] - 1) * 100).toFixed(0)]);
         },
         active(){
             let harmonic = calcPillar();
@@ -2084,10 +2069,10 @@ export const perkList = {
     },
     novice: {
         name: loc(`feat_novice_name`),
-        desc(){
+        desc(wiki){
             let rank = global.stats.feat['novice'] ? global.stats.feat['novice'] : 1;
-            let rna = rank / 2;
-            let dna = rank / 4;
+            let rna = wiki ? "0.5/1/1.5/2/2.5" : rank / 2;
+            let dna = wiki ? "0.25/0.5/0.75/1/1.25" : rank / 4;
             return loc("achieve_perks_novice",[rna,dna]);
         },
         active(){
@@ -2100,10 +2085,10 @@ export const perkList = {
     },
     journeyman: {
         name: loc(`feat_journeyman_name`),
-        desc(){
+        desc(wiki){
             if (global.stats.feat['journeyman'] && global.stats.feat['journeyman'] > 1){
-                let rqueue = global.stats.feat['journeyman'] >= 3 ? (global.stats.feat['journeyman'] >= 5 ? 3 : 2) : 1;
-                let queue = global.stats.feat['journeyman'] >= 4 ? 2 : 1;
+                let rqueue = wiki ? "1/2/3" : global.stats.feat['journeyman'] >= 3 ? (global.stats.feat['journeyman'] >= 5 ? 3 : 2) : 1;
+                let queue = wiki ? "1/2" : global.stats.feat['journeyman'] >= 4 ? 2 : 1;
                 return loc("achieve_perks_journeyman2",[rqueue,queue]);
             }
             else {

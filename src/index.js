@@ -65,6 +65,7 @@ export function mainVue(){
                 global.settings.theme = theme;
                 $('html').removeClass();
                 $('html').addClass(theme);
+                $('html').addClass(global.settings.font);
             },
             numNotation(notation){
                 global.settings.affix = notation;
@@ -840,6 +841,7 @@ export function index(){
         {i: 'clover',       f: 'leprechaun',    r: 1 },
         {i: 'bunny',        f: 'easter',        r: 1 },
         {i: 'egg',          f: 'egghunt',       r: 1 },
+        {i: 'rocket',       f: 'launch_day',    r: 1 },
         {i: 'ghost',        f: 'halloween',     r: 1 },
         {i: 'candy',        f: 'trickortreat',  r: 1 },
         {i: 'turkey',       f: 'thanksgiving',  r: 1 },
